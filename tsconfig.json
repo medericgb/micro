@@ -33,18 +33,6 @@
       ],
       "@app/contracts/*": [
         "libs/contracts/src/*"
-      ],
-      "@db/auth": [
-        "generated/auth"
-      ],
-      "@db/wallet": [
-        "generated/wallet"
-      ],
-      "@db/notification": [
-        "generated/notification"
-      ],
-      "@db/momo": [
-        "generated/momo"
       ]
     }
   }

@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MomoSimController } from './momo-sim.controller';
-import { MomoSimService } from './momo-sim.service';
+import { ConfigModule } from '@nestjs/config';
+import { MomoController } from './momo.controller';
+import { MomoService } from './momo.service';
+import { PrismaService } from './prisma.service';
 
 @Module({
-  imports: [],
-  controllers: [MomoSimController],
-  providers: [MomoSimService],
+  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  controllers: [MomoController],
+  providers: [MomoService, PrismaService],
 })
 export class MomoSimModule {}

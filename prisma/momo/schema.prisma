@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/momo"
+  output   = "../../node_modules/@db/momo"
 }
 
 datasource db {

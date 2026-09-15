@@ -115,16 +115,13 @@ Set `compilerOptions` at the top level to exactly:
 
 `webpack: false` is the riskier of the two changes and Step 11 verifies it before anything depends on it. The trade-off: webpack resolves `@app/*` path aliases at build time and its Nest-supplied `IgnorePlugin` silences the optional `@nestjs/microservices` transports, but it also tries to bundle the Prisma clients, whose native query-engine binaries do not survive bundling. `tsc` leaves Prisma alone but does **not** rewrite path aliases in its output, so alias resolution has to hold at runtime. Step 11 settles which of the two this repo actually needs.
 
-- [ ] **Step 6: Add the generated-client path aliases to `tsconfig.json`**
+- [ ] **Step 6: Do NOT add path aliases for the generated Prisma clients**
 
-Add these alongside the `@app/*` entries the generator created:
+The `@app/*` aliases the generator created are all that belongs in `paths`.
 
-```json
-"@db/auth": ["generated/auth"],
-"@db/wallet": ["generated/wallet"],
-"@db/notification": ["generated/notification"],
-"@db/momo": ["generated/momo"]
-```
+It is tempting to add `"@db/auth": ["generated/auth"]` and friends, but it does not work: `tsc` rewrites an aliased specifier into a path relative to the **emitted** file, and the generated clients are not part of the compiled tree, so `dist/apps/momo-sim/apps/momo-sim/src/prisma.service.js` ends up requiring `dist/apps/momo-sim/generated/momo`, which never exists. It compiles cleanly and then throws `MODULE_NOT_FOUND` on boot.
+
+Task 6 instead generates each client into `node_modules/@db/<service>`, where Prisma writes a real `package.json` with `main`, `types` and a root `exports` entry. `@db/momo` then stays a bare specifier that `tsc` leaves untouched and Node resolves from any depth. Source files still import `from '@db/momo'` exactly as they would have.
 
 - [ ] **Step 7: Teach jest about the library and generated-client paths**
 
@@ -134,15 +131,11 @@ In `package.json`, set `jest.roots` to include libraries, and add the `@db/*` ma
 "roots": ["<rootDir>/apps/", "<rootDir>/libs/"],
 "moduleNameMapper": {
   "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
-  "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1",
-  "^@db/auth$": "<rootDir>/generated/auth",
-  "^@db/wallet$": "<rootDir>/generated/wallet",
-  "^@db/notification$": "<rootDir>/generated/notification",
-  "^@db/momo$": "<rootDir>/generated/momo"
+  "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1"
 }
 ```
 
-Without `libs/` in `roots`, every test written in Tasks 2–5 is silently never run.
+No `@db/*` entries: those resolve through `node_modules` like any other package, so jest needs no help. Without `libs/` in `roots`, every test written in Tasks 2–5 is silently never run — check whether the library generator already added it before editing.
 
 - [ ] **Step 8: Replace the `scripts` block in `package.json`**
 
@@ -172,9 +165,10 @@ Without `libs/` in `roots`, every test written in Tasks 2–5 is silently never 
 Append to `.gitignore`:
 
 ```
-generated/
 .env
 ```
+
+The generated clients live under `node_modules/`, which is already ignored.
 
 - [ ] **Step 10: Verify every app compiles**
 
@@ -197,7 +191,9 @@ PROBE
 pnpm nest build api-gateway && node dist/apps/api-gateway/main.js
 ```
 
-Expected: prints `alias resolved: ok`.
+Expected: prints `alias resolved: ok`, from `dist/apps/api-gateway/apps/api-gateway/src/main.js`. Note that path: once an app imports from `libs/`, tsc widens its `rootDir` to the repo root and the output nests one level deeper than `dist/apps/<app>/main.js`. `nest start` handles this, but a hand-written `node dist/...` command must use the nested path.
+
+This probe covers `@app/*` only. It does **not** cover the generated Prisma clients — see Task 1 Step 6 for why they must not be path-aliased at all.
 
 **If it prints `Cannot find module '@app/common/probe'` instead**, tsc output is not alias-aware. Apply the fallback: revert `nest-cli.json` to `"webpack": true`, then create `webpack.config.js` at the repo root so Prisma's clients are required at runtime rather than bundled —
 
@@ -1341,7 +1337,7 @@ Create `prisma/auth/schema.prisma`:
 ```prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/auth"
+  output   = "../../node_modules/@db/auth"
 }
 
 datasource db {
@@ -1365,7 +1361,7 @@ Create `prisma/wallet/schema.prisma`:
 ```prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/wallet"
+  output   = "../../node_modules/@db/wallet"
 }
 
 datasource db {
@@ -1430,7 +1426,7 @@ Create `prisma/notification/schema.prisma`:
 ```prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/notification"
+  output   = "../../node_modules/@db/notification"
 }
 
 datasource db {
@@ -1458,7 +1454,7 @@ Create `prisma/momo/schema.prisma`:
 ```prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/momo"
+  output   = "../../node_modules/@db/momo"
 }
 
 datasource db {
@@ -1505,11 +1501,13 @@ Expected: `auth.User`; `wallet.Wallet` and `wallet.Transaction`; `notification.N
 
 ```bash
 pnpm prisma:generate
-ls generated
-node -e "const {PrismaClient}=require('./generated/wallet'); console.log(typeof PrismaClient)"
+ls node_modules/@db
+node -e "const {PrismaClient}=require('@db/wallet'); console.log(typeof PrismaClient)"
 ```
 
-Expected: `ls` shows `auth wallet notification momo`, and the node call prints `function`.
+Expected: `ls` shows `auth wallet notification momo`, and the node call prints `function`. The `require` uses the bare specifier deliberately — that is the thing that has to work at runtime.
+
+Note that `pnpm install` can prune these, since nothing in `package.json` declares them. Re-running `pnpm prisma:generate` restores them; this is the same arrangement Prisma uses by default with `node_modules/.prisma/client`.
 
 - [ ] **Step 10: Commit**
 
@@ -3503,11 +3501,7 @@ Replace `apps/api-gateway/test/jest-e2e.json`:
   },
   "moduleNameMapper": {
     "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
-    "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1",
-    "^@db/auth$": "<rootDir>/generated/auth",
-    "^@db/wallet$": "<rootDir>/generated/wallet",
-    "^@db/notification$": "<rootDir>/generated/notification",
-    "^@db/momo$": "<rootDir>/generated/momo"
+    "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1"
   }
 }
 ```

@@ -87,11 +87,7 @@
     ],
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
-      "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1",
-      "^@db/auth$": "<rootDir>/generated/auth",
-      "^@db/wallet$": "<rootDir>/generated/wallet",
-      "^@db/notification$": "<rootDir>/generated/notification",
-      "^@db/momo$": "<rootDir>/generated/momo"
+      "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1"
     }
   },
   "pnpm": {
