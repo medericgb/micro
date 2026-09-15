@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@db/momo"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MOMO_DATABASE_URL")
+}
+
+model ProviderAccount {
+  msisdn       String   @id
+  balanceMinor BigInt   @default(1000000)
+  createdAt    DateTime @default(now())
+}
+
+model ProviderCharge {
+  providerRef String   @id
+  msisdn      String
+  amountMinor BigInt
+  reference   String   @unique
+  outcome     String
+  reason      String?
+  createdAt   DateTime @default(now())
+}
