@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/wallet"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("WALLET_DATABASE_URL")
+}
+
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TxType {
+  DEPOSIT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum TxStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Wallet {
+  id           String        @id @default(uuid())
+  userId       String
+  currency     String        @default("XAF")
+  balanceMinor BigInt        @default(0)
+  status       WalletStatus  @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+
+  @@unique([userId, currency])
+}
+
+model Transaction {
+  id                   String   @id @default(uuid())
+  walletId             String
+  wallet               Wallet   @relation(fields: [walletId], references: [id])
+  type                 TxType
+  status               TxStatus
+  amountMinor          BigInt
+  balanceAfterMinor    BigInt?
+  counterpartyWalletId String?
+  providerRef          String?
+  idempotencyKey       String   @unique
+  failureReason        String?
+  createdAt            DateTime @default(now())
+
+  @@index([walletId, createdAt])
+}
