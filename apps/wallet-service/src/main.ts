@@ -1,8 +1,15 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions } from '@nestjs/microservices';
+import { microserviceOptions } from '@app/common';
 import { WalletServiceModule } from './wallet-service.module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(WalletServiceModule);
-  await app.listen(process.env.port ?? 3000);
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    WalletServiceModule,
+    microserviceOptions('WALLET_SERVICE'),
+  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  await app.listen();
 }
-bootstrap();
+void bootstrap();
