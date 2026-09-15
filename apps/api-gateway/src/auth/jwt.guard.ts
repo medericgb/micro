@@ -24,7 +24,10 @@ export class JwtGuard implements CanActivate {
       request.user = await this.jwt.verifyAsync<TokenClaims>(token);
       return true;
     } catch {
-      throw new AppRpcException(ErrorCode.UNAUTHORIZED, 'Invalid or expired token');
+      throw new AppRpcException(
+        ErrorCode.UNAUTHORIZED,
+        'Invalid or expired token',
+      );
     }
   }
 }

@@ -34,11 +34,15 @@ export class NotificationsController {
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ): Promise<NotificationPage> {
-    return call<NotificationPage>(this.notifications, NOTIFICATION_PATTERNS.list, {
-      userId: user.userId,
-      cursor,
-      limit: limit ? Number(limit) : undefined,
-    });
+    return call<NotificationPage>(
+      this.notifications,
+      NOTIFICATION_PATTERNS.list,
+      {
+        userId: user.userId,
+        cursor,
+        limit: limit ? Number(limit) : undefined,
+      },
+    );
   }
 
   @Post(':notificationId/read')

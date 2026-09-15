@@ -1,98 +1,94 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# PayFlow
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A deliberately simple payments app for learning NestJS microservices.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Services
 
-## Description
+| Service | Type | Port | Owns |
+|---|---|---|---|
+| `api-gateway` | HTTP | 3000 | The only public surface: routing, auth guard, validation, error mapping |
+| `auth-service` | TCP | 4001 | Users, credentials, JWTs |
+| `wallet-service` | TCP | 4002 | Wallets, deposits, transfers, ledger |
+| `notification-service` | TCP | 4003 | In-app notification inbox |
+| `momo-sim` | TCP | 4004 | Simulated mobile-money provider |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+`wallet-service` is itself a client of `momo-sim`, `notification-service` and
+`auth-service`, so the codebase shows service-to-service calls and not only
+gateway fan-out.
 
-## Project setup
+## Getting started
 
 ```bash
-$ pnpm install
+pnpm install
+cp .env.example .env
+docker compose up -d postgres
+pnpm prisma:migrate
+pnpm dev:all
+curl localhost:3000/health
 ```
 
-## Compile and run the project
+Postgres is published on **5433**, not the usual 5432, to avoid colliding with
+another Postgres container on the same machine. Change it in
+`docker-compose.yml` and `.env` together if you prefer a different port.
+
+## Layout
+
+- `apps/*` — the five applications
+- `libs/contracts` — message patterns, injection tokens and DTOs; **the only
+  code shared across service boundaries**
+- `libs/common` — transport config, money helpers, error codes
+- `prisma/*` — one schema per service, each owning a private Postgres schema
+
+## Rules this codebase follows
+
+1. A service never imports another service. Cross-service types come from
+   `@app/contracts`.
+2. A service never reads another service's tables. Cross-service data comes
+   from a message.
+3. Money is a `BigInt` in minor units in the database and a decimal `string` on
+   every wire. `BigInt` has no JSON representation, so it must never reach a
+   contract type.
+4. Every message pattern string is defined once, in
+   `libs/contracts/src/patterns.ts`.
+5. Every mutating operation carries an idempotency key.
+6. Transport is described in exactly one file,
+   `libs/common/src/transport.config.ts`.
+
+## Two build details worth knowing
+
+**Prisma clients generate into `node_modules/@db/<service>`, not into a folder
+in the repo.** Path-aliasing them would compile and then fail at runtime: `tsc`
+rewrites an aliased specifier relative to the *emitted* file, and the clients
+are not part of the compiled tree. Generating into `node_modules` keeps
+`@db/wallet` a bare specifier that Node resolves from any depth. If
+`pnpm install` ever prunes them, run `pnpm prisma:generate`.
+
+**Compiled output nests.** Once an app imports from `libs/`, tsc widens its
+root and emits to `dist/apps/<app>/apps/<app>/src/main.js`. `nest start`
+handles this; a hand-written `node dist/...` command must use the full path.
+
+## Testing
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm test       # unit tests, no database required
+pnpm test:e2e   # boots all five apps and asserts GET /health
 ```
 
-## Run tests
+`pnpm test:e2e` binds the real service ports, so stop `pnpm dev:all` first.
 
-```bash
-# unit tests
-$ pnpm run test
+## Roadmap
 
-# e2e tests
-$ pnpm run test:e2e
+The skeleton wires every service and returns typed stubs. Each milestone fills
+in handlers behind contracts that already exist:
 
-# test coverage
-$ pnpm run test:cov
-```
+1. Register and login — real bcrypt hashing and Prisma lookups
+2. Create wallet, check balance
+3. Deposit through `momo-sim`, including declined and timeout paths
+4. Transfer between users, including the insufficient-funds rollback
+5. Transaction history with cursor pagination
+6. Notifications on every money movement
+7. *Stretch:* swap TCP for RabbitMQ and turn notifications into real events
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+See `docs/superpowers/specs/2026-09-15-payflow-structure-design.md` for the
+full design and `docs/superpowers/plans/2026-09-15-payflow-skeleton.md` for how
+the skeleton was built.

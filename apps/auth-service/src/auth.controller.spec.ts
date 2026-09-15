@@ -20,7 +20,10 @@ describe('AuthController', () => {
   });
 
   it('reports health', () => {
-    expect(controller.health()).toEqual({ service: 'auth-service', status: 'ok' });
+    expect(controller.health()).toEqual({
+      service: 'auth-service',
+      status: 'ok',
+    });
   });
 
   it('returns a typed stub for register and never echoes the password', async () => {
@@ -57,8 +60,8 @@ describe('AuthController', () => {
   });
 
   it('returns a typed stub for findByEmail', async () => {
-    expect((await controller.findByEmail({ email: 'ada@example.com' })).email).toBe(
-      'ada@example.com',
-    );
+    expect(
+      (await controller.findByEmail({ email: 'ada@example.com' })).email,
+    ).toBe('ada@example.com');
   });
 });

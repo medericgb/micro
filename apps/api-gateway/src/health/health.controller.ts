@@ -1,6 +1,10 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { HEALTH_PATTERNS, SERVICE_TOKENS, type ServiceName } from '@app/contracts';
+import {
+  HEALTH_PATTERNS,
+  SERVICE_TOKENS,
+  type ServiceName,
+} from '@app/contracts';
 import { call } from '../rpc';
 
 type ServiceHealth = 'ok' | 'unreachable';

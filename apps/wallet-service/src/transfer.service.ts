@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { randomUUID } from 'node:crypto';
-import { SERVICE_TOKENS, type TransferDto, type TransactionView } from '@app/contracts';
+import {
+  SERVICE_TOKENS,
+  type TransferDto,
+  type TransactionView,
+} from '@app/contracts';
 
 /**
  * Skeleton stub. Milestone 4 implements the spec's transfer flow: resolve the

@@ -21,16 +21,31 @@ describe('transport.config', () => {
   });
 
   it('falls back to documented defaults', () => {
-    expect(endpointFor('AUTH_SERVICE')).toEqual({ host: 'localhost', port: 4001 });
-    expect(endpointFor('WALLET_SERVICE')).toEqual({ host: 'localhost', port: 4002 });
-    expect(endpointFor('NOTIFICATION_SERVICE')).toEqual({ host: 'localhost', port: 4003 });
-    expect(endpointFor('MOMO_SERVICE')).toEqual({ host: 'localhost', port: 4004 });
+    expect(endpointFor('AUTH_SERVICE')).toEqual({
+      host: 'localhost',
+      port: 4001,
+    });
+    expect(endpointFor('WALLET_SERVICE')).toEqual({
+      host: 'localhost',
+      port: 4002,
+    });
+    expect(endpointFor('NOTIFICATION_SERVICE')).toEqual({
+      host: 'localhost',
+      port: 4003,
+    });
+    expect(endpointFor('MOMO_SERVICE')).toEqual({
+      host: 'localhost',
+      port: 4004,
+    });
   });
 
   it('reads the environment at call time, not at import time', () => {
     process.env.AUTH_HOST = 'auth-service';
     process.env.AUTH_PORT = '5001';
-    expect(endpointFor('AUTH_SERVICE')).toEqual({ host: 'auth-service', port: 5001 });
+    expect(endpointFor('AUTH_SERVICE')).toEqual({
+      host: 'auth-service',
+      port: 5001,
+    });
   });
 
   it('ignores a non-numeric port and uses the default', () => {

@@ -5,10 +5,7 @@ import {
 } from '@nestjs/microservices';
 
 export type ServiceName =
-  | 'AUTH_SERVICE'
-  | 'WALLET_SERVICE'
-  | 'NOTIFICATION_SERVICE'
-  | 'MOMO_SERVICE';
+  'AUTH_SERVICE' | 'WALLET_SERVICE' | 'NOTIFICATION_SERVICE' | 'MOMO_SERVICE';
 
 interface EndpointDefaults {
   hostVar: string;
@@ -18,7 +15,11 @@ interface EndpointDefaults {
 
 const DEFAULTS: Record<ServiceName, EndpointDefaults> = {
   AUTH_SERVICE: { hostVar: 'AUTH_HOST', portVar: 'AUTH_PORT', port: 4001 },
-  WALLET_SERVICE: { hostVar: 'WALLET_HOST', portVar: 'WALLET_PORT', port: 4002 },
+  WALLET_SERVICE: {
+    hostVar: 'WALLET_HOST',
+    portVar: 'WALLET_PORT',
+    port: 4002,
+  },
   NOTIFICATION_SERVICE: {
     hostVar: 'NOTIFICATION_HOST',
     portVar: 'NOTIFICATION_PORT',

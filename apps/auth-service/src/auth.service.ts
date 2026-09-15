@@ -21,7 +21,12 @@ export class AuthService {
   constructor(private readonly jwt: JwtService) {}
 
   private stubUser(id: string, email: string): UserView {
-    return { id, email, fullName: 'Stub User', createdAt: new Date().toISOString() };
+    return {
+      id,
+      email,
+      fullName: 'Stub User',
+      createdAt: new Date().toISOString(),
+    };
   }
 
   async register(dto: RegisterDto): Promise<UserView> {
@@ -36,7 +41,10 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthTokens> {
     const expiresIn = Number(process.env.JWT_EXPIRES_IN ?? 3600);
     const claims: TokenClaims = { userId: randomUUID(), email: dto.email };
-    return { accessToken: await this.jwt.signAsync(claims, { expiresIn }), expiresIn };
+    return {
+      accessToken: await this.jwt.signAsync(claims, { expiresIn }),
+      expiresIn,
+    };
   }
 
   async validateToken(dto: ValidateTokenDto): Promise<TokenClaims> {

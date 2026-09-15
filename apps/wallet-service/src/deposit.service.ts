@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { randomUUID } from 'node:crypto';
-import { SERVICE_TOKENS, type DepositDto, type TransactionView } from '@app/contracts';
+import {
+  SERVICE_TOKENS,
+  type DepositDto,
+  type TransactionView,
+} from '@app/contracts';
 
 /**
  * Skeleton stub. Milestone 3 implements the spec's deposit flow:

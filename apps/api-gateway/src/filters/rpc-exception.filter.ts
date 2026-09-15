@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { ErrorCode, httpStatusForCode, isRpcErrorPayload } from '@app/common';
 
 /**
@@ -26,7 +27,7 @@ export class RpcExceptionFilter implements ExceptionFilter {
 
     const { status, code, message, details } = this.describe(exception);
 
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status >= Number(HttpStatus.INTERNAL_SERVER_ERROR)) {
       this.logger.error(
         `${request?.url ?? 'unknown'} -> ${code}: ${message}`,
         exception instanceof Error ? exception.stack : undefined,
@@ -49,12 +50,18 @@ export class RpcExceptionFilter implements ExceptionFilter {
     message: string;
     details?: unknown;
   } {
-    if (isRpcErrorPayload(exception)) {
+    // Raised across the wire: the ClientProxy rejects with the plain payload.
+    // Raised locally (the JwtGuard), it is still the RpcException instance, and
+    // isRpcErrorPayload rejects Errors — so unwrap it before the structural check.
+    const candidate =
+      exception instanceof RpcException ? exception.getError() : exception;
+
+    if (isRpcErrorPayload(candidate)) {
       return {
-        status: httpStatusForCode(exception.code),
-        code: exception.code,
-        message: exception.message,
-        details: exception.details,
+        status: httpStatusForCode(candidate.code),
+        code: candidate.code,
+        message: candidate.message,
+        details: candidate.details,
       };
     }
 

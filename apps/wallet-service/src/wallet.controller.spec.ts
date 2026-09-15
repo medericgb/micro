@@ -15,7 +15,10 @@ describe('WalletController', () => {
   let controller: WalletController;
 
   beforeEach(async () => {
-    const clientMock: Partial<ClientProxy> = { send: jest.fn(), emit: jest.fn() };
+    const clientMock: Partial<ClientProxy> = {
+      send: jest.fn(),
+      emit: jest.fn(),
+    };
 
     const moduleRef = await Test.createTestingModule({
       controllers: [WalletController],
@@ -35,7 +38,10 @@ describe('WalletController', () => {
   });
 
   it('reports health', () => {
-    expect(controller.health()).toEqual({ service: 'wallet-service', status: 'ok' });
+    expect(controller.health()).toEqual({
+      service: 'wallet-service',
+      status: 'ok',
+    });
   });
 
   it('defaults a created wallet to XAF with a zero balance', async () => {
@@ -49,11 +55,16 @@ describe('WalletController', () => {
   });
 
   it('honours an explicit currency', async () => {
-    expect((await controller.create({ userId: USER_ID, currency: 'EUR' })).currency).toBe('EUR');
+    expect(
+      (await controller.create({ userId: USER_ID, currency: 'EUR' })).currency,
+    ).toBe('EUR');
   });
 
   it('returns balances as decimal strings, never BigInt', async () => {
-    const result = await controller.getBalance({ userId: USER_ID, walletId: WALLET_ID });
+    const result = await controller.getBalance({
+      userId: USER_ID,
+      walletId: WALLET_ID,
+    });
     expect(typeof result.balance).toBe('string');
     expect(() => JSON.stringify(result)).not.toThrow();
   });
@@ -66,7 +77,11 @@ describe('WalletController', () => {
       msisdn: '237600000001',
       idempotencyKey: 'dep-1',
     });
-    expect(result).toMatchObject({ type: 'DEPOSIT', status: 'PENDING', amount: '25.00' });
+    expect(result).toMatchObject({
+      type: 'DEPOSIT',
+      status: 'PENDING',
+      amount: '25.00',
+    });
   });
 
   it('returns a transfer stub', async () => {
@@ -80,7 +95,9 @@ describe('WalletController', () => {
   });
 
   it('returns an empty history page', async () => {
-    expect(await controller.history({ userId: USER_ID, walletId: WALLET_ID })).toEqual({
+    expect(
+      await controller.history({ userId: USER_ID, walletId: WALLET_ID }),
+    ).toEqual({
       items: [],
       nextCursor: null,
     });

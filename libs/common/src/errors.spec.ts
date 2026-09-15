@@ -8,7 +8,10 @@ import {
 
 describe('errors', () => {
   it('carries a structured payload through RpcException', () => {
-    const error = new AppRpcException(ErrorCode.INSUFFICIENT_FUNDS, 'Balance too low');
+    const error = new AppRpcException(
+      ErrorCode.INSUFFICIENT_FUNDS,
+      'Balance too low',
+    );
     expect(error.getError()).toEqual({
       code: 'INSUFFICIENT_FUNDS',
       message: 'Balance too low',
@@ -16,9 +19,13 @@ describe('errors', () => {
   });
 
   it('includes details when supplied', () => {
-    const error = new AppRpcException(ErrorCode.VALIDATION_FAILED, 'Bad input', {
-      field: 'amount',
-    });
+    const error = new AppRpcException(
+      ErrorCode.VALIDATION_FAILED,
+      'Bad input',
+      {
+        field: 'amount',
+      },
+    );
     expect(error.getError()).toEqual({
       code: 'VALIDATION_FAILED',
       message: 'Bad input',
@@ -41,12 +48,16 @@ describe('errors', () => {
   });
 
   it('maps an unknown code to 500', () => {
-    expect(httpStatusForCode('SOMETHING_NEW')).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(httpStatusForCode('SOMETHING_NEW')).toBe(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   });
 
   describe('isRpcErrorPayload', () => {
     it('recognises a structured payload', () => {
-      expect(isRpcErrorPayload({ code: 'UNAUTHORIZED', message: 'no' })).toBe(true);
+      expect(isRpcErrorPayload({ code: 'UNAUTHORIZED', message: 'no' })).toBe(
+        true,
+      );
     });
 
     it('rejects anything else', () => {

@@ -24,7 +24,11 @@ export class WalletService {
   }
 
   async create(dto: CreateWalletDto): Promise<WalletView> {
-    return this.stubWallet(randomUUID(), dto.userId, dto.currency ?? DEFAULT_CURRENCY);
+    return this.stubWallet(
+      randomUUID(),
+      dto.userId,
+      dto.currency ?? DEFAULT_CURRENCY,
+    );
   }
 
   async list(dto: ListWalletsDto): Promise<WalletView[]> {

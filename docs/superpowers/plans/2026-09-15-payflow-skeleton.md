@@ -3122,6 +3122,8 @@ export class JwtGuard implements CanActivate {
 
 The guard throws `AppRpcException` so its `{ code, message }` payload flows through the same filter as every service error, giving one error shape across the whole API.
 
+**This requires the filter to unwrap `RpcException` first.** A service error crosses the wire and arrives as a plain object, but this one is thrown *inside* the gateway and arrives as the class instance — and `isRpcErrorPayload` rejects anything `instanceof Error`. Without the unwrap in Step 3, a bad token returns 500 `INTERNAL_ERROR` instead of 401 `UNAUTHORIZED`. The filter's Step 1 test covers it.
+
 Create `apps/api-gateway/src/auth/current-user.decorator.ts`:
 
 ```ts

@@ -3,7 +3,10 @@ import { validateSync } from 'class-validator';
 import { RegisterDto } from './auth';
 import { DepositDto, TransferDto } from './wallet';
 
-function errorsFor<T extends object>(cls: new () => T, payload: object): string[] {
+function errorsFor<T extends object>(
+  cls: new () => T,
+  payload: object,
+): string[] {
   const instance = plainToInstance(cls, payload);
   return validateSync(instance).map((e) => e.property);
 }

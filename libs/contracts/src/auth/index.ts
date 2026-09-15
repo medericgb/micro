@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsString, IsUUID, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { BaseMessageDto } from '../base.dto';
 
 export class RegisterDto extends BaseMessageDto {

@@ -1,9 +1,14 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "../../..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testRegex": "apps/api-gateway/test/.*\\.e2e-spec\\.ts$",
+  "testTimeout": 30000,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
+    "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src/$1"
   }
 }

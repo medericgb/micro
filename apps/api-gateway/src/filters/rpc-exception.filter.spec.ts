@@ -1,4 +1,5 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { AppRpcException, ErrorCode } from '@app/common';
 import { RpcExceptionFilter } from './rpc-exception.filter';
 
 function hostWithResponse() {
@@ -29,6 +30,23 @@ describe('RpcExceptionFilter', () => {
         code: 'INSUFFICIENT_FUNDS',
         message: 'Balance too low',
         correlationId: 'cid-1',
+      }),
+    );
+  });
+
+  it('maps a locally thrown AppRpcException, as the JwtGuard raises', () => {
+    const { host, status, json } = hostWithResponse();
+
+    new RpcExceptionFilter().catch(
+      new AppRpcException(ErrorCode.UNAUTHORIZED, 'Invalid or expired token'),
+      host,
+    );
+
+    expect(status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid or expired token',
       }),
     );
   });

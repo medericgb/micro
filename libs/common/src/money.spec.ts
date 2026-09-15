@@ -1,4 +1,9 @@
-import { AMOUNT_PATTERN, toMinor, toDecimal, assertPositiveAmount } from './money';
+import {
+  AMOUNT_PATTERN,
+  toMinor,
+  toDecimal,
+  assertPositiveAmount,
+} from './money';
 
 describe('money', () => {
   describe('toMinor', () => {
@@ -48,7 +53,9 @@ describe('money', () => {
     });
 
     it('rejects zero', () => {
-      expect(() => assertPositiveAmount('0.00')).toThrow('must be greater than zero');
+      expect(() => assertPositiveAmount('0.00')).toThrow(
+        'must be greater than zero',
+      );
     });
   });
 

@@ -10,7 +10,9 @@ import {
 describe('patterns', () => {
   it('namespaces every pattern by its owning service', () => {
     Object.values(AUTH_PATTERNS).forEach((p) => expect(p).toMatch(/^auth\./));
-    Object.values(WALLET_PATTERNS).forEach((p) => expect(p).toMatch(/^wallet\./));
+    Object.values(WALLET_PATTERNS).forEach((p) =>
+      expect(p).toMatch(/^wallet\./),
+    );
     Object.values(NOTIFICATION_PATTERNS).forEach((p) =>
       expect(p).toMatch(/^notification\./),
     );

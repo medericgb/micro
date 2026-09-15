@@ -15,11 +15,19 @@ import type {
 @Injectable()
 export class MomoService {
   async charge(dto: ChargeDto): Promise<ProviderResult> {
-    return { providerRef: `chg_${randomUUID()}`, outcome: 'SUCCESS', reason: null };
+    return {
+      providerRef: `chg_${randomUUID()}`,
+      outcome: 'SUCCESS',
+      reason: null,
+    };
   }
 
   async payout(dto: PayoutDto): Promise<ProviderResult> {
-    return { providerRef: `pay_${randomUUID()}`, outcome: 'SUCCESS', reason: null };
+    return {
+      providerRef: `pay_${randomUUID()}`,
+      outcome: 'SUCCESS',
+      reason: null,
+    };
   }
 
   async status(dto: ProviderStatusDto): Promise<ProviderResult> {
