@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { NotificationServiceController } from './notification-service.controller';
-import { NotificationServiceService } from './notification-service.service';
+import { ConfigModule } from '@nestjs/config';
+import { NotificationController } from './notification.controller';
+import { NotificationService } from './notification.service';
+import { PrismaService } from './prisma.service';
 
 @Module({
-  imports: [],
-  controllers: [NotificationServiceController],
-  providers: [NotificationServiceService],
+  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  controllers: [NotificationController],
+  providers: [NotificationService, PrismaService],
 })
 export class NotificationServiceModule {}
