@@ -1,5 +1,6 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Throttle } from '@nestjs/throttler';
 import {
   AUTH_PATTERNS,
   WALLET_PATTERNS,
@@ -11,7 +12,11 @@ import {
   type AuthTokens,
 } from '@app/contracts';
 import { call } from '../rpc';
+import { authThrottle } from '../security.config';
 
+// The only two routes that take no token, so the only two an attacker can
+// hammer for free. Tighter than the global budget.
+@Throttle(authThrottle())
 @Controller('auth')
 export class AuthController {
   constructor(

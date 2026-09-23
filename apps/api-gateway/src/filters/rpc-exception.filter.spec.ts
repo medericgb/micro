@@ -1,4 +1,5 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ThrottlerException } from '@nestjs/throttler';
 import { AppRpcException, ErrorCode } from '@app/common';
 import { RpcExceptionFilter } from './rpc-exception.filter';
 
@@ -67,6 +68,20 @@ describe('RpcExceptionFilter', () => {
     expect(status).toHaveBeenCalledWith(HttpStatus.GATEWAY_TIMEOUT);
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({ code: 'PROVIDER_TIMEOUT' }),
+    );
+  });
+
+  it('maps a throttled request to 429, not to a validation error', () => {
+    const { host, status, json } = hostWithResponse();
+
+    new RpcExceptionFilter().catch(new ThrottlerException(), host);
+
+    expect(status).toHaveBeenCalledWith(HttpStatus.TOO_MANY_REQUESTS);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        code: 'RATE_LIMITED',
+      }),
     );
   });
 

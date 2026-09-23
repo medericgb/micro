@@ -47,12 +47,31 @@ another Postgres container on the same machine. Change it in
    from a message.
 3. Money is a `BigInt` in minor units in the database and a decimal `string` on
    every wire. `BigInt` has no JSON representation, so it must never reach a
-   contract type.
+   contract type. A single amount is capped at `MAX_AMOUNT` (999999999999.99);
+   an accumulated balance is not.
 4. Every message pattern string is defined once, in
    `libs/contracts/src/patterns.ts`.
-5. Every mutating operation carries an idempotency key.
+5. Every mutating operation carries an idempotency key, unique per wallet
+   rather than globally, so one user cannot burn another user's key.
 6. Transport is described in exactly one file,
-   `libs/common/src/transport.config.ts`.
+   `libs/common/src/transport.config.ts`. Gateway edge policy — rate limits and
+   CORS — likewise lives in `apps/api-gateway/src/security.config.ts`.
+
+## Gateway edge policy
+
+The gateway is the only public surface, so it is the only place that needs edge
+defences. `helmet()` sets the standard response headers, a global
+`ThrottlerGuard` gives every route a budget of 120 requests a minute, and
+`/auth/register` and `/auth/login` get a tighter 10 — they are the two routes
+that take no token. A throttled request comes back as `429 RATE_LIMITED`.
+
+**CORS is deny-by-default.** An empty `CORS_ORIGINS` means no cross-origin
+browser access at all; set a comma-separated list of exact origins to let a
+frontend in. A payments gateway that defaults to `*` is one forgotten variable
+away from letting any page on the internet spend a signed-in user's balance.
+
+All of it is tunable through the `THROTTLE_*` and `CORS_ORIGINS` variables in
+`.env.example`.
 
 ## Two build details worth knowing
 

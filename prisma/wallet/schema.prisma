@@ -48,9 +48,12 @@ model Transaction {
   balanceAfterMinor    BigInt?
   counterpartyWalletId String?
   providerRef          String?
-  idempotencyKey       String   @unique
+  idempotencyKey       String
   failureReason        String?
   createdAt            DateTime @default(now())
 
+  // Scoped to the wallet, not global: a globally unique key lets one user burn
+  // a key another user is about to present.
+  @@unique([walletId, idempotencyKey])
   @@index([walletId, createdAt])
 }

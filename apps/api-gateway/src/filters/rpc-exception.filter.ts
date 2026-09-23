@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { ThrottlerException } from '@nestjs/throttler';
 import { ErrorCode, httpStatusForCode, isRpcErrorPayload } from '@app/common';
 
 /**
@@ -62,6 +63,16 @@ export class RpcExceptionFilter implements ExceptionFilter {
         code: candidate.code,
         message: candidate.message,
         details: candidate.details,
+      };
+    }
+
+    // Before the HttpException branch: ThrottlerException is one, and would
+    // otherwise be reported as a 429 labelled VALIDATION_FAILED.
+    if (exception instanceof ThrottlerException) {
+      return {
+        status: httpStatusForCode(ErrorCode.RATE_LIMITED),
+        code: ErrorCode.RATE_LIMITED,
+        message: 'Too many requests',
       };
     }
 

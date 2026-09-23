@@ -1,4 +1,4 @@
-import { AMOUNT_PATTERN } from '@app/common';
+import { AMOUNT_PATTERN, MAX_AMOUNT } from '@app/common';
 import {
   IsEmail,
   IsInt,
@@ -33,7 +33,7 @@ export class DepositDto extends BaseMessageDto {
   @IsUUID() walletId!: string;
   @IsUUID() userId!: string;
   @Matches(AMOUNT_PATTERN, {
-    message: 'amount must be a decimal string with at most 2 places',
+    message: `amount must be a decimal string with at most 2 places, up to ${MAX_AMOUNT}`,
   })
   amount!: string;
   @IsString() @IsNotEmpty() msisdn!: string;
@@ -44,7 +44,7 @@ export class TransferDto extends BaseMessageDto {
   @IsUUID() fromUserId!: string;
   @IsEmail() toEmail!: string;
   @Matches(AMOUNT_PATTERN, {
-    message: 'amount must be a decimal string with at most 2 places',
+    message: `amount must be a decimal string with at most 2 places, up to ${MAX_AMOUNT}`,
   })
   amount!: string;
   @IsString() @IsNotEmpty() idempotencyKey!: string;

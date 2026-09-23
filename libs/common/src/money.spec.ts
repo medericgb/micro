@@ -1,5 +1,7 @@
 import {
   AMOUNT_PATTERN,
+  MAX_AMOUNT,
+  MAX_AMOUNT_MINOR,
   toMinor,
   toDecimal,
   assertPositiveAmount,
@@ -19,8 +21,15 @@ describe('money', () => {
       expect(toMinor('50.2')).toBe(5020n);
     });
 
-    it('handles amounts far beyond Number.MAX_SAFE_INTEGER', () => {
-      expect(toMinor('99999999999999999.99')).toBe(9999999999999999999n);
+    it('accepts the largest amount the format allows', () => {
+      expect(toMinor(MAX_AMOUNT)).toBe(MAX_AMOUNT_MINOR);
+    });
+
+    it('rejects an amount one digit past the cap', () => {
+      expect(() => toMinor('9999999999999.99')).toThrow('Invalid amount');
+      expect(() => toMinor('999999999999999999999999')).toThrow(
+        'Invalid amount',
+      );
     });
 
     it('rejects a malformed amount', () => {
@@ -45,6 +54,12 @@ describe('money', () => {
     it('round-trips with toMinor', () => {
       expect(toDecimal(toMinor('1234.56'))).toBe('1234.56');
     });
+
+    // A single amount is capped, an accumulated balance is not: this is the
+    // case that rules out Number for balances.
+    it('formats balances far beyond Number.MAX_SAFE_INTEGER', () => {
+      expect(toDecimal(9999999999999999999n)).toBe('99999999999999999.99');
+    });
   });
 
   describe('assertPositiveAmount', () => {
@@ -64,5 +79,14 @@ describe('money', () => {
     expect(AMOUNT_PATTERN.test('10.5')).toBe(true);
     expect(AMOUNT_PATTERN.test('10.50')).toBe(true);
     expect(AMOUNT_PATTERN.test('10.500')).toBe(false);
+    expect(AMOUNT_PATTERN.test(MAX_AMOUNT)).toBe(true);
+    expect(AMOUNT_PATTERN.test('999999999999999999999999')).toBe(false);
+  });
+
+  // The DTOs validate with AMOUNT_PATTERN and the services parse with toMinor.
+  // If those two ever disagree, one layer accepts what the other rejects.
+  it('keeps MAX_AMOUNT, MAX_AMOUNT_MINOR and the pattern in agreement', () => {
+    expect(toDecimal(MAX_AMOUNT_MINOR)).toBe(MAX_AMOUNT);
+    expect(AMOUNT_PATTERN.test(toDecimal(MAX_AMOUNT_MINOR + 1n))).toBe(false);
   });
 });
