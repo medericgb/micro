@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
+import { getEnv } from '@app/common';
 import type {
   RegisterDto,
   LoginDto,
@@ -39,7 +40,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    const expiresIn = Number(process.env.JWT_EXPIRES_IN ?? 3600);
+    const expiresIn = Number(getEnv('JWT_EXPIRES_IN', '3600'));
     const claims: TokenClaims = { userId: randomUUID(), email: dto.email };
     return {
       accessToken: await this.jwt.signAsync(claims, { expiresIn }),

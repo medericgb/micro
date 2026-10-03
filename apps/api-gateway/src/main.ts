@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';
 import helmet from 'helmet';
 import type { Request, Response, NextFunction } from 'express';
+import { getEnv } from '@app/common';
 import { ApiGatewayModule } from './api-gateway.module';
 import { RpcExceptionFilter } from './filters/rpc-exception.filter';
 import { corsOptions } from './security.config';
@@ -40,6 +41,6 @@ async function bootstrap(): Promise<void> {
   );
   app.useGlobalFilters(new RpcExceptionFilter());
 
-  await app.listen(Number(process.env.GATEWAY_PORT ?? 3000));
+  await app.listen(Number(getEnv('GATEWAY_PORT', '3000')));
 }
 void bootstrap();

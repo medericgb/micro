@@ -3,6 +3,7 @@ import {
   MicroserviceOptions,
   Transport,
 } from '@nestjs/microservices';
+import { getEnv } from './get-env';
 
 export type ServiceName =
   'AUTH_SERVICE' | 'WALLET_SERVICE' | 'NOTIFICATION_SERVICE' | 'MOMO_SERVICE';
@@ -28,13 +29,8 @@ const DEFAULTS: Record<ServiceName, EndpointDefaults> = {
   MOMO_SERVICE: { hostVar: 'MOMO_HOST', portVar: 'MOMO_PORT', port: 4004 },
 };
 
-function readString(key: string, fallback: string): string {
-  const value = process.env[key];
-  return value && value.length > 0 ? value : fallback;
-}
-
 function readInt(key: string, fallback: number): number {
-  const value = process.env[key];
+  const value = getEnv(key, '');
   if (!value) return fallback;
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : fallback;
@@ -44,7 +40,7 @@ function readInt(key: string, fallback: number): number {
 export function endpointFor(name: ServiceName): { host: string; port: number } {
   const spec = DEFAULTS[name];
   return {
-    host: readString(spec.hostVar, 'localhost'),
+    host: getEnv(spec.hostVar, 'localhost'),
     port: readInt(spec.portVar, spec.port),
   };
 }

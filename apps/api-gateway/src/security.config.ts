@@ -1,5 +1,6 @@
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import type { Throttle, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { getEnv } from '@app/common';
 
 /**
  * Edge policy is described in exactly one file, the way transport config is.
@@ -13,7 +14,7 @@ const MINUTE_MS = 60_000;
 type ThrottleOptions = Parameters<typeof Throttle>[0];
 
 function readInt(key: string, fallback: number): number {
-  const value = process.env[key];
+  const value = getEnv(key, '');
   if (!value) return fallback;
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
@@ -52,7 +53,7 @@ export function authThrottle(): ThrottleOptions {
  * has to be the one you opt into.
  */
 export function corsOptions(): CorsOptions | false {
-  const origins = (process.env.CORS_ORIGINS ?? '')
+  const origins = getEnv('CORS_ORIGINS', '')
     .split(',')
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);

@@ -4,7 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule } from '@nestjs/microservices';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { clientOptions } from '@app/common';
+import { clientOptions, getEnv } from '@app/common';
 import { globalThrottle } from './security.config';
 import { AuthController } from './auth/auth.controller';
 import { WalletsController } from './wallets/wallets.controller';
@@ -16,7 +16,7 @@ import { HealthController } from './health/health.controller';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? 'dev-only-change-me',
+      secret: getEnv('JWT_SECRET', 'dev-only-change-me'),
     }),
     ThrottlerModule.forRoot(globalThrottle()),
     ClientsModule.register([
